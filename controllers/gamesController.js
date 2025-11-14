@@ -1,82 +1,87 @@
 const Game = require('../models/Game');
 
-// ➕ Crear un nuevo juego
+// Crear nuevo juego
 exports.crearJuego = async (req, res) => {
   try {
-    const nuevoJuego = new Game(req.body);
-    await nuevoJuego.save();
-    res.status(201).json({
-      mensaje: '🎮 Juego creado exitosamente',
-      data: nuevoJuego,
+    const nuevoJuego = await Game.create({
+      ...req.body,
+      usuario: req.user._id // 🔒 Asocia al usuario logueado
     });
-  } catch (error) {
-    console.error('Error al crear juego:', error.message);
-    res.status(400).json({ error: error.message });
+    res.status(201).json(nuevoJuego);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al crear juego' });
   }
 };
 
-// 📋 Obtener todos los juegos
+// Obtener juegos del usuario actual
 exports.obtenerJuegos = async (req, res) => {
   try {
-    const juegos = await Game.find().sort({ fechaCreacion: -1 });
+    const juegos = await Game.find({ usuario: req.user._id });
     res.json(juegos);
-  } catch (error) {
-    console.error('Error al listar juegos:', error.message);
-    res.status(500).json({ error: 'Error al obtener los juegos' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener juegos' });
   }
 };
 
-// 🔍 Obtener un solo juego por ID
+// Obtener, actualizar, eliminar (igual)
 exports.obtenerJuegoPorId = async (req, res) => {
   try {
     const juego = await Game.findById(req.params.id);
-    if (!juego) {
-      return res.status(404).json({ mensaje: 'Juego no encontrado' });
-    }
+    if (!juego) return res.status(404).json({ error: 'Juego no encontrado' });
     res.json(juego);
-  } catch (error) {
-    console.error('Error al obtener juego:', error.message);
-    res.status(400).json({ error: 'ID no válido o error en la búsqueda' });
+  } catch {
+    res.status(500).json({ error: 'Error al obtener juego' });
   }
 };
 
-// ✏️ Actualizar un juego
 exports.actualizarJuego = async (req, res) => {
   try {
-    const juegoActualizado = await Game.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const juego = await Game.findById(req.params.id);
+    if (!juego) return res.status(404).json({ error: 'No encontrado' });
 
-    if (!juegoActualizado) {
-      return res.status(404).json({ mensaje: 'Juego no encontrado' });
+    if (juego.usuario.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'No autorizado' });
     }
 
-    res.json({
-      mensaje: '✅ Juego actualizado correctamente',
-      data: juegoActualizado,
+    const actualizado = await Game.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
     });
-  } catch (error) {
-    console.error('Error al actualizar juego:', error.message);
-    res.status(400).json({ error: error.message });
+    res.json(actualizado);
+  } catch {
+    res.status(500).json({ error: 'Error al actualizar juego' });
   }
 };
 
-// ❌ Eliminar un juego
 exports.eliminarJuego = async (req, res) => {
   try {
-    const juegoEliminado = await Game.findByIdAndDelete(req.params.id);
-    if (!juegoEliminado) {
-      return res.status(404).json({ mensaje: 'Juego no encontrado' });
+    const juego = await Game.findById(req.params.id);
+    if (!juego) return res.status(404).json({ error: 'No encontrado' });
+
+    if (juego.usuario.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'No autorizado' });
     }
 
-    res.json({
-      mensaje: '🗑️ Juego eliminado correctamente',
-      data: juegoEliminado,
-    });
-  } catch (error) {
-    console.error('Error al eliminar juego:', error.message);
-    res.status(400).json({ error: 'Error al eliminar el juego' });
+    await juego.deleteOne();
+    res.json({ mensaje: 'Juego eliminado' });
+  } catch {
+    res.status(500).json({ error: 'Error al eliminar juego' });
   }
 };
+
+// ⭐ NUEVA FUNCIÓN PARA OBTENER TODOS LOS JUEGOS, MENOS LOS DEL USUARIO LOGUEADO
+const explorarJuegos = async (req, res) => {
+  try {
+    const usuarioId = req.user._id;
+
+    const juegos = await Game.find({
+      usuario: { $ne: usuarioId } // ❗ Excluir juegos del usuario actual
+    }).populate("usuario", "name email");
+
+    res.json(juegos);
+  } catch (err) {
+    console.error("Error en explorarJuegos:", err);
+    res.status(500).json({ error: "Error obteniendo juegos de otros usuarios" });
+  }
+};
+
+exports.explorarJuegos = explorarJuegos;

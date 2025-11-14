@@ -16,7 +16,7 @@ const GameSchema = new mongoose.Schema({
     required: [true, 'La plataforma es obligatoria'],
     trim: true,
   },
-  anoLanzamiento: {
+  añoLanzamiento: {
     type: Number,
     required: [true, 'El año de lanzamiento es obligatorio'],
     min: 1950, // por si acaso
@@ -42,6 +42,11 @@ const GameSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  usuario: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+  required: true }
+    
 });
 
 // Exportar el modelo

@@ -1,97 +1,112 @@
-const Review = require('../models/Review');
-const Game = require('../models/Game');
+const Review = require("../models/Review");
 
-// ➕ Crear una nueva reseña
-exports.crearReseña = async (req, res) => {
+// ⭐ Crear reseña
+const crearReseña = async (req, res) => {
   try {
-    const { juegoId } = req.body;
-
-    // Verificar que el juego exista
-    const juego = await Game.findById(juegoId);
-    if (!juego) {
-      return res.status(404).json({ mensaje: 'El videojuego no existe' });
-    }
-
-    const nuevaReseña = new Review(req.body);
-    await nuevaReseña.save();
-
-    res.status(201).json({
-      mensaje: '📝 Reseña creada exitosamente',
-      data: nuevaReseña,
+    const review = new Review({
+      juegoId: req.body.juegoId,
+      puntuacion: req.body.puntuacion,
+      textoReseña: req.body.textoReseña,
+      horasJugadas: req.body.horasJugadas,
+      dificultad: req.body.dificultad,
+      recomendaria: req.body.recomendaria,
+      usuario: req.user._id,  // GUARDA EL USUARIO LOGUEADO
+      fechaCreacion: new Date(),
+      fechaActualizacion: new Date(),
     });
-  } catch (error) {
-    console.error('Error al crear reseña:', error.message);
-    res.status(400).json({ error: error.message });
+
+    await review.save();
+    res.status(201).json(review);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 };
 
-// 📋 Obtener todas las reseñas (opcionalmente filtradas por juego)
-exports.obtenerReseñas = async (req, res) => {
+// ⭐ Obtener TODAS las reseñas de un juego (visible para todos)
+const obtenerReseñasPorJuego = async (req, res) => {
   try {
-    const { juegoId } = req.query; // opcional: /api/reviews?juegoId=xxxx
-    const filtro = juegoId ? { juegoId } : {};
-    const reseñas = await Review.find(filtro)
-      .populate('juegoId', 'titulo plataforma genero')
+    const juegoId = req.params.juegoId;
+
+    const reseñas = await Review.find({ juegoId })
+      .populate("usuario", "nombre email")  // Muestra info del usuario que escribió la reseña
       .sort({ fechaCreacion: -1 });
 
     res.json(reseñas);
-  } catch (error) {
-    console.error('Error al obtener reseñas:', error.message);
-    res.status(500).json({ error: 'Error al listar reseñas' });
+  } catch (err) {
+    console.error("Error obteniendo reseñas:", err);
+    res.status(500).json({ error: "Error al obtener reseñas" });
   }
 };
-
-// 🔍 Obtener una reseña específica
-exports.obtenerReseñaPorId = async (req, res) => {
+// ⭐ Actualizar reseña (solo si pertenece al usuario)
+const actualizarReseña = async (req, res) => {
   try {
-    const reseña = await Review.findById(req.params.id).populate('juegoId');
+    const reseña = await Review.findById(req.params.id);
+
     if (!reseña) {
-      return res.status(404).json({ mensaje: 'Reseña no encontrada' });
+      return res.status(404).json({ error: "Reseña no encontrada" });
     }
+
+    // ❌ Si la reseña NO pertenece al usuario → No permitir actualizar
+    if (reseña.usuario.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "No puedes editar esta reseña" });
+    }
+
+    // ⭐ Actualizar campos
+    reseña.puntuacion = req.body.puntuacion ?? reseña.puntuacion;
+    reseña.textoReseña = req.body.textoReseña ?? reseña.textoReseña;
+    reseña.horasJugadas = req.body.horasJugadas ?? reseña.horasJugadas;
+    reseña.dificultad = req.body.dificultad ?? reseña.dificultad;
+    reseña.recomendaria = req.body.recomendaria ?? reseña.recomendaria;
+    reseña.fechaActualizacion = new Date();
+
+    await reseña.save();
+
     res.json(reseña);
-  } catch (error) {
-    console.error('Error al obtener reseña:', error.message);
-    res.status(400).json({ error: 'ID no válido o error en la búsqueda' });
+  } catch (err) {
+    console.error("Error actualizando reseña:", err);
+    res.status(500).json({ error: "Error al actualizar reseña" });
   }
 };
-
-// ✏️ Actualizar una reseña
-exports.actualizarReseña = async (req, res) => {
+// ⭐ Eliminar reseña (solo si pertenece al usuario)
+const eliminarReseña = async (req, res) => {
   try {
-    const reseñaActualizada = await Review.findByIdAndUpdate(
-      req.params.id,
-      { ...req.body, fechaActualizacion: Date.now() },
-      { new: true, runValidators: true }
-    );
+    const reseña = await Review.findById(req.params.id);
 
-    if (!reseñaActualizada) {
-      return res.status(404).json({ mensaje: 'Reseña no encontrada' });
+    if (!reseña) {
+      return res.status(404).json({ error: "Reseña no encontrada" });
     }
 
-    res.json({
-      mensaje: '✅ Reseña actualizada correctamente',
-      data: reseñaActualizada,
-    });
-  } catch (error) {
-    console.error('Error al actualizar reseña:', error.message);
-    res.status(400).json({ error: error.message });
-  }
-};
-
-// ❌ Eliminar una reseña
-exports.eliminarReseña = async (req, res) => {
-  try {
-    const reseñaEliminada = await Review.findByIdAndDelete(req.params.id);
-    if (!reseñaEliminada) {
-      return res.status(404).json({ mensaje: 'Reseña no encontrada' });
+    // ❌ Si NO pertenece al usuario → rechazar
+    if (reseña.usuario.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "No puedes eliminar esta reseña" });
     }
 
-    res.json({
-      mensaje: '🗑️ Reseña eliminada correctamente',
-      data: reseñaEliminada,
-    });
-  } catch (error) {
-    console.error('Error al eliminar reseña:', error.message);
-    res.status(400).json({ error: 'Error al eliminar reseña' });
+    await reseña.deleteOne();
+
+    res.json({ message: "Reseña eliminada correctamente" });
+  } catch (err) {
+    console.error("Error eliminando reseña:", err);
+    res.status(500).json({ error: "Error al eliminar reseña" });
   }
 };
+// ⭐ Obtener reseñas del usuario logueado
+const obtenerReseñasDeUsuario = async (req, res) => {
+  try {
+    const reseñas = await Review.find({ usuario: req.user._id })
+      .populate("juegoId", "titulo imagenPortada")
+      .sort({ fechaCreacion: -1 });
+
+    res.json(reseñas);
+  } catch (err) {
+    console.error("Error obteniendo reseñas del usuario:", err);
+    res.status(500).json({ error: "Error al obtener tus reseñas" });
+  }
+};
+module.exports = {
+  crearReseña,
+  obtenerReseñasPorJuego,
+  actualizarReseña,
+  eliminarReseña,
+  obtenerReseñasDeUsuario,
+};
+

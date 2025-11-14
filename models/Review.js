@@ -37,6 +37,12 @@ const ReviewSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  usuario: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  required: true
+}
+
 });
 
 // Middleware para actualizar la fecha de modificación

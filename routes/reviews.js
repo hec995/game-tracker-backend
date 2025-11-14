@@ -1,18 +1,25 @@
-const express = require('express');
+const express = require('express'); 
 const router = express.Router();
-const {
-  crearReseña,
-  obtenerReseñas,
-  obtenerReseñaPorId,
+const protegerRuta = require('../middlewares/authMiddleware');
+const { 
+  crearReseña, 
+  obtenerReseñasPorJuego,
   actualizarReseña,
   eliminarReseña,
+  obtenerReseñasDeUsuario
 } = require('../controllers/reviewsController');
 
-// Rutas CRUD
-router.post('/', crearReseña);            // Crear reseña
-router.get('/', obtenerReseñas);          // Listar todas o filtrar por juego
-router.get('/:id', obtenerReseñaPorId);   // Obtener una reseña
-router.put('/:id', actualizarReseña);     // Actualizar reseña
-router.delete('/:id', eliminarReseña);    // Eliminar reseña
+// ⭐ Crear reseña
+router.post('/', protegerRuta, crearReseña);
 
+// ⭐ Obtener reseñas de un juego
+router.get("/game/:juegoId", protegerRuta, obtenerReseñasPorJuego);
+
+// ⭐ Actualizar reseña
+router.put("/:id", protegerRuta, actualizarReseña);
+
+// ⭐ Eliminar reseña
+router.delete("/:id", protegerRuta, eliminarReseña);
+
+router.get("/my-reviews", protegerRuta, obtenerReseñasDeUsuario);
 module.exports = router;

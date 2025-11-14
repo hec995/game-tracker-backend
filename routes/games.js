@@ -6,13 +6,21 @@ const {
   obtenerJuegoPorId,
   actualizarJuego,
   eliminarJuego,
+  explorarJuegos
 } = require('../controllers/gamesController');
-
+const protegerRuta=require('../middlewares/authMiddleware');
 // Rutas CRUD
-router.post('/', crearJuego);              // Crear juego
-router.get('/', obtenerJuegos);            // Listar todos
-router.get('/:id', obtenerJuegoPorId);     // Obtener por ID
-router.put('/:id', actualizarJuego);       // Actualizar
-router.delete('/:id', eliminarJuego);      // Eliminar
+
+router.route('/')
+  .get(protegerRuta, obtenerJuegos)
+  .post(protegerRuta, crearJuego);
+
+router.route('/:id')
+  .get(protegerRuta, obtenerJuegoPorId)
+  .put(protegerRuta, actualizarJuego)
+  .delete(protegerRuta, eliminarJuego);
+
+router.route("/explore/all")
+ .get(protegerRuta, explorarJuegos);
 
 module.exports = router;
