@@ -4,7 +4,7 @@ const protegerRuta = require("../middlewares/authMiddleware");
 const Game = require("../models/Game");
 const Review = require("../models/Review");
 
-// 📌 Obtener estadísticas generales
+//  Obtener estadísticas generales
 router.get("/", protegerRuta, async (req, res) => {
   try {
     const totalJuegos = await Game.countDocuments();

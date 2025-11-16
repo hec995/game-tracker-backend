@@ -9,7 +9,7 @@ const {
   explorarJuegos
 } = require('../controllers/gamesController');
 const protegerRuta=require('../middlewares/authMiddleware');
-// Rutas CRUD
+// Rutas
 
 router.route('/')
   .get(protegerRuta, obtenerJuegos)

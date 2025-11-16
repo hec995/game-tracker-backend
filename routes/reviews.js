@@ -9,16 +9,16 @@ const {
   obtenerReseñasDeUsuario
 } = require('../controllers/reviewsController');
 
-// ⭐ Crear reseña
+//  Crear reseña
 router.post('/', protegerRuta, crearReseña);
 
-// ⭐ Obtener reseñas de un juego
+//  Obtener reseñas de un juego
 router.get("/game/:juegoId", protegerRuta, obtenerReseñasPorJuego);
 
-// ⭐ Actualizar reseña
+//  Actualizar reseña
 router.put("/:id", protegerRuta, actualizarReseña);
 
-// ⭐ Eliminar reseña
+//  Eliminar reseña
 router.delete("/:id", protegerRuta, eliminarReseña);
 
 router.get("/my-reviews", protegerRuta, obtenerReseñasDeUsuario);

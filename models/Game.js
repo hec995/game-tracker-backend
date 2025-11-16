@@ -19,7 +19,7 @@ const GameSchema = new mongoose.Schema({
   añoLanzamiento: {
     type: Number,
     required: [true, 'El año de lanzamiento es obligatorio'],
-    min: 1950, // por si acaso
+    min: 1950, 
   },
   desarrollador: {
     type: String,
@@ -28,7 +28,7 @@ const GameSchema = new mongoose.Schema({
   },
   imagenPortada: {
     type: String,
-    default: '', // URL de la imagen de portada
+    default: '', 
   },
   descripcion: {
     type: String,
@@ -49,5 +49,5 @@ const GameSchema = new mongoose.Schema({
     
 });
 
-// Exportar el modelo
+
 module.exports = mongoose.model('Game', GameSchema);

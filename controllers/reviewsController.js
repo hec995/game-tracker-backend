@@ -1,6 +1,6 @@
 const Review = require("../models/Review");
 
-// ⭐ Crear reseña
+//  Crear reseña
 const crearReseña = async (req, res) => {
   try {
     const review = new Review({
@@ -10,7 +10,7 @@ const crearReseña = async (req, res) => {
       horasJugadas: req.body.horasJugadas,
       dificultad: req.body.dificultad,
       recomendaria: req.body.recomendaria,
-      usuario: req.user._id,  // GUARDA EL USUARIO LOGUEADO
+      usuario: req.user._id,  
       fechaCreacion: new Date(),
       fechaActualizacion: new Date(),
     });
@@ -22,7 +22,7 @@ const crearReseña = async (req, res) => {
   }
 };
 
-// ⭐ Obtener TODAS las reseñas de un juego (visible para todos)
+// Obtener TODAS las reseñas de un juego 
 const obtenerReseñasPorJuego = async (req, res) => {
   try {
     const juegoId = req.params.juegoId;
@@ -37,7 +37,7 @@ const obtenerReseñasPorJuego = async (req, res) => {
     res.status(500).json({ error: "Error al obtener reseñas" });
   }
 };
-// ⭐ Actualizar reseña (solo si pertenece al usuario)
+//  Actualizar reseña 
 const actualizarReseña = async (req, res) => {
   try {
     const reseña = await Review.findById(req.params.id);
@@ -46,12 +46,12 @@ const actualizarReseña = async (req, res) => {
       return res.status(404).json({ error: "Reseña no encontrada" });
     }
 
-    // ❌ Si la reseña NO pertenece al usuario → No permitir actualizar
+   
     if (reseña.usuario.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "No puedes editar esta reseña" });
     }
 
-    // ⭐ Actualizar campos
+    //  Actualizar campos
     reseña.puntuacion = req.body.puntuacion ?? reseña.puntuacion;
     reseña.textoReseña = req.body.textoReseña ?? reseña.textoReseña;
     reseña.horasJugadas = req.body.horasJugadas ?? reseña.horasJugadas;
@@ -67,7 +67,7 @@ const actualizarReseña = async (req, res) => {
     res.status(500).json({ error: "Error al actualizar reseña" });
   }
 };
-// ⭐ Eliminar reseña (solo si pertenece al usuario)
+//  Eliminar reseña 
 const eliminarReseña = async (req, res) => {
   try {
     const reseña = await Review.findById(req.params.id);
@@ -76,7 +76,6 @@ const eliminarReseña = async (req, res) => {
       return res.status(404).json({ error: "Reseña no encontrada" });
     }
 
-    // ❌ Si NO pertenece al usuario → rechazar
     if (reseña.usuario.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "No puedes eliminar esta reseña" });
     }
@@ -89,7 +88,7 @@ const eliminarReseña = async (req, res) => {
     res.status(500).json({ error: "Error al eliminar reseña" });
   }
 };
-// ⭐ Obtener reseñas del usuario logueado
+// Obtener reseñas del usuario logueado
 const obtenerReseñasDeUsuario = async (req, res) => {
   try {
     const reseñas = await Review.find({ usuario: req.user._id })

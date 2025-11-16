@@ -5,7 +5,7 @@ exports.crearJuego = async (req, res) => {
   try {
     const nuevoJuego = await Game.create({
       ...req.body,
-      usuario: req.user._id // 🔒 Asocia al usuario logueado
+      usuario: req.user._id 
     });
     res.status(201).json(nuevoJuego);
   } catch (err) {
@@ -23,7 +23,7 @@ exports.obtenerJuegos = async (req, res) => {
   }
 };
 
-// Obtener, actualizar, eliminar (igual)
+// Obtener, actualizar, eliminar 
 exports.obtenerJuegoPorId = async (req, res) => {
   try {
     const juego = await Game.findById(req.params.id);
@@ -68,14 +68,14 @@ exports.eliminarJuego = async (req, res) => {
   }
 };
 
-// ⭐ NUEVA FUNCIÓN PARA OBTENER TODOS LOS JUEGOS, MENOS LOS DEL USUARIO LOGUEADO
+//   FUNCIÓN PARA OBTENER TODOS LOS JUEGOS, MENOS LOS DEL USUARIO LOGUEADO
 const explorarJuegos = async (req, res) => {
   try {
     const usuarioId = req.user._id;
 
     const juegos = await Game.find({
-      usuario: { $ne: usuarioId } // ❗ Excluir juegos del usuario actual
-    }).populate("usuario", "name email");
+      usuario: { $ne: usuarioId } //  Excluir juegos del usuario actual
+    }).populate("usuario", "nombre");
 
     res.json(juegos);
   } catch (err) {
